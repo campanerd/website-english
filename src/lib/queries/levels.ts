@@ -85,3 +85,21 @@ export async function getPublishedLevelBySlug(
     })),
   }
 }
+
+export type LevelOption = {
+  id: string
+  slug: string
+  title: string
+}
+
+export async function getAllLevels(): Promise<LevelOption[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("levels")
+    .select("id, slug, title")
+    .order("order_index", { ascending: true })
+
+  if (error) throw error
+  return data ?? []
+}
