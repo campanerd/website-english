@@ -83,3 +83,54 @@ export async function createTopic(
 
   redirect("/admin")
 }
+
+export type DeleteTopicState = {
+  error: string | null
+}
+
+export async function deleteTopic(
+  _prevState: DeleteTopicState,
+  formData: FormData
+): Promise<DeleteTopicState> {
+  const id = formData.get("id")
+  if (typeof id !== "string" || !id) {
+    return { error: "Tópico inválido." }
+  }
+
+  const supabase = await createClient()
+
+  const { data: topic, error: fetchError } = await supabase
+    .from("topics")
+    .select("pdf_path, level:levels(slug)")
+    .eq("id", id)
+    .single()
+
+  if (fetchError || !topic) {
+    return { error: "Tópico não encontrado." }
+  }
+
+  if (topic.pdf_path) {
+    const { error: removeError } = await supabase.storage
+      .from("topic-pdfs")
+      .remove([topic.pdf_path])
+
+    if (removeError) {
+      return { error: "Falha ao apagar o PDF: " + removeError.message }
+    }
+  }
+
+  const { error: deleteError } = await supabase.from("topics").delete().eq("id", id)
+
+  if (deleteError) {
+    return { error: "Falha ao apagar o tópico: " + deleteError.message }
+  }
+
+  revalidatePath("/")
+  revalidatePath("/metodologia")
+  if (topic.level) {
+    revalidatePath(`/metodologia/${topic.level.slug}`)
+  }
+  revalidatePath("/admin/topicos")
+
+  return { error: null }
+}
