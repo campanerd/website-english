@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { PencilIcon } from "lucide-react"
 import { getAllTopicsForAdmin } from "@/lib/queries/topics"
 import { Button } from "@/components/ui/button"
 import {
@@ -48,7 +49,18 @@ export default async function TopicsListPage() {
                   {topic.is_published ? "Publicado" : "Rascunho"}
                 </TableCell>
                 <TableCell className="text-right">
-                  <DeleteTopicButton id={topic.id} title={topic.title} />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      render={<Link href={`/admin/topicos/${topic.id}`} />}
+                      nativeButton={false}
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label={`Editar ${topic.title}`}
+                    >
+                      <PencilIcon />
+                    </Button>
+                    <DeleteTopicButton id={topic.id} title={topic.title} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

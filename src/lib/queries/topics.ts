@@ -39,3 +39,31 @@ export async function getAllTopicsForAdmin(): Promise<AdminTopic[]> {
       return levelDiff !== 0 ? levelDiff : a.order_index - b.order_index
     })
 }
+
+export type AdminTopicDetail = {
+  id: string
+  level_id: string
+  slug: string
+  title: string
+  summary: string | null
+  pdf_path: string | null
+  pdf_original_name: string | null
+  is_published: boolean
+}
+
+export async function getTopicById(
+  id: string
+): Promise<AdminTopicDetail | null> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("topics")
+    .select(
+      "id, level_id, slug, title, summary, pdf_path, pdf_original_name, is_published"
+    )
+    .eq("id", id)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}

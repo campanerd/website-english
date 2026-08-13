@@ -35,7 +35,7 @@ export default async function LevelPage(props: PageProps<"/metodologia/[nivel]">
                     {topic.title}
                   </a>
                   {topic.summary && (
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground break-words">
                       {topic.summary}
                     </p>
                   )}

@@ -1,8 +1,9 @@
 "use client"
 
 import { useActionState } from "react"
-import { createTopic, type CreateTopicState } from "@/lib/actions/topics"
+import { updateTopic, type UpdateTopicState } from "@/lib/actions/topics"
 import type { LevelOption } from "@/lib/queries/levels"
+import type { AdminTopicDetail } from "@/lib/queries/topics"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,22 +15,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
-const initialState: CreateTopicState = { error: null }
+const initialState: UpdateTopicState = { error: null }
 
-export function NewTopicForm({ levels }: { levels: LevelOption[] }) {
+export function EditTopicForm({
+  topic,
+  levels,
+}: {
+  topic: AdminTopicDetail
+  levels: LevelOption[]
+}) {
   const [state, formAction, isPending] = useActionState(
-    createTopic,
+    updateTopic,
     initialState
   )
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      <input type="hidden" name="id" value={topic.id} />
+
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="level_id">Nível</Label>
         <Select
           name="level_id"
-          defaultValue={levels[0]?.id}
+          defaultValue={topic.level_id}
           items={levels.map((level) => ({ value: level.id, label: level.title }))}
         >
           <SelectTrigger id="level_id" className="w-full">
@@ -47,7 +57,7 @@ export function NewTopicForm({ levels }: { levels: LevelOption[] }) {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="title">Título</Label>
-        <Input id="title" name="title" required placeholder="Ex: Afirmações" />
+        <Input id="title" name="title" required defaultValue={topic.title} />
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -57,19 +67,36 @@ export function NewTopicForm({ levels }: { levels: LevelOption[] }) {
           name="summary"
           rows={2}
           maxLength={160}
-          placeholder="Uma linha explicando o conteúdo do PDF"
+          defaultValue={topic.summary ?? ""}
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="pdf">Arquivo PDF</Label>
-        <Input id="pdf" name="pdf" type="file" accept="application/pdf" required />
+        {topic.pdf_original_name && (
+          <p className="text-sm text-muted-foreground">
+            Arquivo atual: {topic.pdf_original_name}
+          </p>
+        )}
+        <Input id="pdf" name="pdf" type="file" accept="application/pdf" />
+        <p className="text-xs text-muted-foreground">
+          Deixe em branco pra manter o arquivo atual.
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Switch
+          id="is_published"
+          name="is_published"
+          defaultChecked={topic.is_published}
+        />
+        <Label htmlFor="is_published">Publicado (visível no site)</Label>
       </div>
 
       {state.error && <p className="text-sm text-destructive">{state.error}</p>}
 
       <Button type="submit" disabled={isPending} className="mt-2 self-start">
-        {isPending ? "Salvando..." : "Criar Tópico"}
+        {isPending ? "Salvando..." : "Salvar Alterações"}
       </Button>
     </form>
   )
