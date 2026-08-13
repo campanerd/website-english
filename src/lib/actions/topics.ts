@@ -37,21 +37,20 @@ export async function createTopic(
 
   const supabase = await createClient()
 
-  const { data: level, error: levelError } = await supabase
-    .from("levels")
-    .select("slug")
-    .eq("id", level_id)
-    .single()
+  const [levelResult, countResult] = await Promise.all([
+    supabase.from("levels").select("slug").eq("id", level_id).single(),
+    supabase
+      .from("topics")
+      .select("id", { count: "exact", head: true })
+      .eq("level_id", level_id),
+  ])
 
+  const { data: level, error: levelError } = levelResult
   if (levelError || !level) {
     return { error: "Nível não encontrado." }
   }
 
-  const { count } = await supabase
-    .from("topics")
-    .select("id", { count: "exact", head: true })
-    .eq("level_id", level_id)
-
+  const { count } = countResult
   const pdfPath = `${level.slug}/${slug}.pdf`
 
   const { error: uploadError } = await supabase.storage
@@ -163,22 +162,21 @@ export async function updateTopic(
 
   const supabase = await createClient()
 
-  const { data: existing, error: fetchError } = await supabase
-    .from("topics")
-    .select("pdf_path, level:levels(slug)")
-    .eq("id", id)
-    .single()
+  const [existingResult, newLevelResult] = await Promise.all([
+    supabase
+      .from("topics")
+      .select("pdf_path, level:levels(slug)")
+      .eq("id", id)
+      .single(),
+    supabase.from("levels").select("slug").eq("id", level_id).single(),
+  ])
 
+  const { data: existing, error: fetchError } = existingResult
   if (fetchError || !existing) {
     return { error: "Tópico não encontrado." }
   }
 
-  const { data: newLevel, error: levelError } = await supabase
-    .from("levels")
-    .select("slug")
-    .eq("id", level_id)
-    .single()
-
+  const { data: newLevel, error: levelError } = newLevelResult
   if (levelError || !newLevel) {
     return { error: "Nível não encontrado." }
   }
